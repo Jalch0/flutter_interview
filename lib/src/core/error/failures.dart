@@ -12,12 +12,6 @@ class ServerFailure extends Failure {
   });
 }
 
-class CacheFailure extends Failure {
-  const CacheFailure({
-    required super.message,
-  });
-}
-
 class DatabaseFailure extends Failure {
   const DatabaseFailure({
     required super.message,

@@ -79,11 +79,11 @@ class _HomePageState extends State<_HomePage> {
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.public),
-            label: 'Countries',
+            label: 'Países',
           ),
           NavigationDestination(
             icon: Icon(Icons.favorite),
-            label: 'Wishlist',
+            label: 'Lista de deseos',
           ),
         ],
       ),
