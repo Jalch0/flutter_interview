@@ -1,6 +1,6 @@
 # Flutter Interview — European Countries
 
-[![Flutter](https://img.shields.io/badge/Flutter-3.24+-02569B?logo=flutter)](https://flutter.dev)
+[![Flutter](https://img.shields.io/badge/Flutter-3.27+-02569B?logo=flutter)](https://flutter.dev)
 [![Dart](https://img.shields.io/badge/Dart-3.6+-0175C2?logo=dart)](https://dart.dev)
 
 Aplicación Flutter que consume la [REST Countries API](https://restcountries.com/). Incluye listado de países europeos, detalle con caché por país y lista de deseos persistida localmente. Desarrollada con **Clean Architecture**, **BLoC** y pruebas unitarias.
@@ -33,7 +33,7 @@ Aplicación Flutter que consume la [REST Countries API](https://restcountries.co
 
 ## 📋 Requisitos
 
-- **Flutter** ≥ 3.24
+- **Flutter** ≥ 3.27
 - **Dart** ≥ 3.6
 
 ---
