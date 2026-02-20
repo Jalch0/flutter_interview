@@ -12,7 +12,7 @@ class RestCountriesDio {
     return CacheOptions(
       store: cacheStore ?? MemCacheStore(),
       policy: CachePolicy.request,
-      hitCacheOnNetworkFailure: true,
+      hitCacheOnErrorExcept: [401, 403, 404],
       maxStale: const Duration(days: 30),
     );
   }

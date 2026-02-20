@@ -1,5 +1,4 @@
 import 'package:dartz/dartz.dart';
-import 'package:dio/dio.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/country.dart';
@@ -18,27 +17,22 @@ class CountryRepositoryImpl implements CountryRepository {
   Future<Either<Failure, List<Country>>> getEuropeanCountries() async {
     try {
       final models = await _remoteDataSource.getEuropeanCountries();
+
       final countries = models
           .map((countryModel) => countryModel.toEntity())
           .toList(growable: false);
 
       return Right(countries);
-    } on DioException catch (error) {
+    } on RestCountriesException catch (error) {
       return Left(
         ServerFailure(
-          message: 'Error al obtener países: ${error.message}',
-        ),
-      );
-    } on FormatException catch (error) {
-      return Left(
-        ServerFailure(
-          message: 'Respuesta inválida de países: ${error.message}',
+          message: error.message,
         ),
       );
     } catch (error) {
       return Left(
         ServerFailure(
-          message: 'Error inesperado al obtener países: $error',
+          message: 'Error inesperado al obtener la lista de países.',
         ),
       );
     }
@@ -54,22 +48,16 @@ class CountryRepositoryImpl implements CountryRepository {
       );
 
       return Right(model.toEntity());
-    } on DioException catch (error) {
+    } on RestCountriesException catch (error) {
       return Left(
         ServerFailure(
-          message: 'Error al obtener detalle: ${error.message}',
-        ),
-      );
-    } on FormatException catch (error) {
-      return Left(
-        ServerFailure(
-          message: 'Detalle inválido del país: ${error.message}',
+          message: error.message,
         ),
       );
     } catch (error) {
       return Left(
         ServerFailure(
-          message: 'Error inesperado en detalle: $error',
+          message: 'Error inesperado al cargar los detalles del país.',
         ),
       );
     }

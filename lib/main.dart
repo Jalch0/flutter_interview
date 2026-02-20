@@ -9,7 +9,9 @@ import 'src/features/wishlist/presentation/pages/wishlist_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   await configureDependencies();
+
   runApp(const FlutterInterviewApp());
 }
 
@@ -24,7 +26,9 @@ class FlutterInterviewApp extends StatelessWidget {
           create: (_) => getIt<CountryListBloc>()
             ..add(const CountryListEvent.fetchRequested()),
         ),
-        BlocProvider(create: (_) => getIt<WishlistBloc>()),
+        BlocProvider(
+          create: (_) => getIt<WishlistBloc>(),
+        ),
       ],
       child: MaterialApp(
         title: 'Flutter Interview',

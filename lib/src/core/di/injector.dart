@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
+import 'package:dio_cache_interceptor_db_store/dio_cache_interceptor_db_store.dart';
 import 'package:get_it/get_it.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../../features/countries/data/datasources/countries_remote_data_source.dart';
 import '../../features/countries/data/repositories/country_repository_impl.dart';
@@ -27,7 +29,11 @@ Future<void> configureDependencies() async {
     return;
   }
 
-  getIt.registerLazySingleton<CacheStore>(() => MemCacheStore());
+  final cacheDir = await getTemporaryDirectory();
+
+  getIt.registerLazySingleton<CacheStore>(
+    () => DbCacheStore(databasePath: '${cacheDir.path}/api_cache.db'),
+  );
 
   getIt.registerLazySingleton<CacheOptions>(
     () => RestCountriesDio.buildCacheOptions(
@@ -48,20 +54,6 @@ Future<void> configureDependencies() async {
     ),
   );
 
-  getIt.registerLazySingleton<CountryRepository>(
-    () => CountryRepositoryImpl(
-      remoteDataSource: getIt<CountriesRemoteDataSource>(),
-    ),
-  );
-
-  getIt.registerLazySingleton<GetEuropeanCountries>(
-    () => GetEuropeanCountries(getIt<CountryRepository>()),
-  );
-
-  getIt.registerLazySingleton<GetCountryDetails>(
-    () => GetCountryDetails(getIt<CountryRepository>()),
-  );
-
   getIt.registerLazySingleton<AppDatabase>(() => AppDatabase());
 
   getIt.registerLazySingleton<WishlistDao>(
@@ -74,10 +66,24 @@ Future<void> configureDependencies() async {
     ),
   );
 
+  getIt.registerLazySingleton<CountryRepository>(
+    () => CountryRepositoryImpl(
+      remoteDataSource: getIt<CountriesRemoteDataSource>(),
+    ),
+  );
+
   getIt.registerLazySingleton<WishlistRepository>(
     () => WishlistRepositoryImpl(
       localDataSource: getIt<WishlistLocalDataSource>(),
     ),
+  );
+
+  getIt.registerLazySingleton<GetEuropeanCountries>(
+    () => GetEuropeanCountries(getIt<CountryRepository>()),
+  );
+
+  getIt.registerLazySingleton<GetCountryDetails>(
+    () => GetCountryDetails(getIt<CountryRepository>()),
   );
 
   getIt.registerLazySingleton<SaveToWishlist>(

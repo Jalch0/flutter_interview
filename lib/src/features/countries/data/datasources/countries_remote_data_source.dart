@@ -24,56 +24,109 @@ class CountriesRemoteDataSourceImpl implements CountriesRemoteDataSource {
 
   @override
   Future<List<CountryModel>> getEuropeanCountries() async {
-    final response = await _dio.get('/region/europe');
-    final data = response.data;
+    try {
+      final options = _cacheOptions
+          .copyWith(
+            maxStale: const Nullable(Duration(hours: 24)),
+          )
+          .toOptions();
 
-    if (data is! List) {
-      throw const FormatException(
-        'Lista de países formato no válido',
+      final response = await _dio.get(
+        '/region/europe',
+        options: options,
       );
-    }
 
-    return data
-        .map(
-          (item) => CountryModel.fromJson(
-            Map<String, dynamic>.from(item as Map),
-          ),
-        )
-        .toList(growable: false);
+      final data = response.data;
+
+      if (data == null || data is! List) {
+        throw const RestCountriesException(
+            'Formato de lista de países no válido');
+      }
+
+      return data
+          .cast<Map<String, dynamic>>()
+          .map(CountryModel.fromJson)
+          .toList(growable: false);
+    } on DioException catch (e) {
+      throw RestCountriesException.fromDioException(e);
+    } catch (e) {
+      throw RestCountriesException('Error inesperado: $e');
+    }
   }
 
   @override
   Future<CountryDetailModel> getCountryDetails({
     required String countryName,
   }) async {
-    final encodedCountryName = Uri.encodeComponent(countryName);
-    final detailCacheOptions = _cacheOptions.copyWith(
-      policy: CachePolicy.forceCache,
-      keyBuilder: ({
-        required Uri url,
-        Map<String, String>? headers,
-        Object? body,
-      }) {
-        final normalized = countryName.trim().toLowerCase();
-        return 'country_detail_$normalized';
-      },
-    );
+    try {
+      final encodedCountryName = Uri.encodeComponent(countryName);
 
-    final response = await _dio.get(
-      '/translation/$encodedCountryName',
-      options: detailCacheOptions.toOptions(),
-    );
-
-    final data = response.data;
-
-    if (data is! List || data.isEmpty) {
-      throw const FormatException(
-        'Country detail formato no válido',
+      final detailCacheOptions = _cacheOptions.copyWith(
+        policy: CachePolicy.forceCache,
+        maxStale: const Nullable(Duration(days: 7)),
+        keyBuilder: (request) {
+          final normalized = countryName.trim().toLowerCase();
+          return 'country_detail_$normalized';
+        },
       );
-    }
 
-    return CountryDetailModel.fromJson(
-      Map<String, dynamic>.from(data.first as Map),
-    );
+      final response = await _dio.get(
+        '/name/$encodedCountryName',
+        queryParameters: {'fullText': true},
+        options: detailCacheOptions.toOptions(),
+      );
+
+      final data = response.data;
+
+      if (data == null || data is! List || data.isEmpty) {
+        throw const RestCountriesException('Detalle del país no encontrado');
+      }
+
+      return CountryDetailModel.fromJson(
+        Map<String, dynamic>.from(data.first as Map),
+      );
+    } on DioException catch (e) {
+      throw RestCountriesException.fromDioException(e);
+    } catch (e) {
+      throw RestCountriesException('Error inesperado: $e');
+    }
   }
+}
+
+class RestCountriesException implements Exception {
+  const RestCountriesException(this.message);
+
+  factory RestCountriesException.fromDioException(DioException e) {
+    switch (e.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+        return const RestCountriesException(
+            'Tiempo de conexión agotado. Revisa tu internet.');
+      case DioExceptionType.badResponse:
+        final statusCode = e.response?.statusCode;
+        if (statusCode == 404) {
+          return const RestCountriesException('País no encontrado.');
+        } else if (statusCode == 500) {
+          return const RestCountriesException('Error interno del servidor.');
+        }
+        return RestCountriesException(
+          'HTTP $statusCode: ${e.response?.statusMessage ?? 'Error desconocido'}',
+        );
+      case DioExceptionType.cancel:
+        return const RestCountriesException('Petición cancelada.');
+      case DioExceptionType.connectionError:
+        return const RestCountriesException('No hay conexión a internet.');
+      case DioExceptionType.badCertificate:
+        return const RestCountriesException(
+            'Error de seguridad en la conexión.');
+      case DioExceptionType.unknown:
+        return RestCountriesException('Error de red: ${e.message}');
+    }
+  }
+
+  final String message;
+
+  @override
+  String toString() => message;
 }
